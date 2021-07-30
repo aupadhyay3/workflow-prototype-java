@@ -6,10 +6,11 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
 
 import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,9 @@ public class WorkflowTaskApp {
                     .withScope("Namespaced")
                     .withPlural("workflowtasks")
                     .build();
+            RawCustomResourceOperationsImpl cr = client.customResource(context).inNamespace(ns);
 
-            client.customResource(context).watch(ns, new Watcher<String>() {
+            cr.watch(new Watcher<String>() {
                 @Override
                 public void eventReceived(Action action, String resource) {
                     try {
@@ -34,11 +36,14 @@ public class WorkflowTaskApp {
                         String taskName = json.getJSONObject("metadata").getString("name");
 
                         if (action == Action.ADDED) {
-                            logger.info("Added WorkflowTask " + taskName);
-                        }
+                            logger.info("Added WorkflowTask {}", taskName);
 
-                    } catch (JSONException e) {
-                        logger.error("Failed to parse object");
+                            JSONObject status = new JSONObject().put("status", new JSONObject().put("executor", "test"));
+                            Map<String, Object> result = cr.withName(taskName).updateStatus(status.toString());
+                            logger.info("{}", result);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
 
