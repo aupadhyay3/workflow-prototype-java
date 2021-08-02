@@ -1,7 +1,7 @@
 package com.nirmata.workflow;
 
 public interface WorkflowTask {
-    String getTaskType();
+    String getType();
 
-    void execute();
+    void execute() throws Exception;
 }
