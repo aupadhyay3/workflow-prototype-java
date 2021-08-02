@@ -1,24 +1,21 @@
 package com.nirmata.workflow;
 
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
-
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.Map;
-
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WorkflowTaskApp {
     private static final Logger logger = LoggerFactory.getLogger(WorkflowTaskApp.class);
 
-    public void startApp(String ns) {
+    private void start() {
         try (KubernetesClient client = new DefaultKubernetesClient()) {
             CustomResourceDefinitionContext context = new CustomResourceDefinitionContext.Builder()
                     .withVersion("v1")
@@ -26,21 +23,16 @@ public class WorkflowTaskApp {
                     .withScope("Namespaced")
                     .withPlural("workflowtasks")
                     .build();
-            RawCustomResourceOperationsImpl cr = client.customResource(context).inNamespace(ns);
+            RawCustomResourceOperationsImpl cr = client.customResource(context).inNamespace("default");
+
+            BlockingQueue<String> dispatch = new LinkedBlockingQueue<>();
 
             cr.watch(new Watcher<String>() {
                 @Override
                 public void eventReceived(Action action, String resource) {
                     try {
-                        JSONObject json = new JSONObject(resource);
-                        String taskName = json.getJSONObject("metadata").getString("name");
-
                         if (action == Action.ADDED) {
-                            logger.info("Added WorkflowTask {}", taskName);
-
-                            JSONObject status = new JSONObject().put("status", new JSONObject().put("executor", "test"));
-                            Map<String, Object> result = cr.withName(taskName).updateStatus(status.toString());
-                            logger.info("{}", result);
+                            dispatch.put(resource);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -56,8 +48,6 @@ public class WorkflowTaskApp {
                 }
             });
 
-            logger.info("hi");
-
             TimeUnit.MINUTES.sleep(10);
 
         } catch (Exception e) {
@@ -65,12 +55,8 @@ public class WorkflowTaskApp {
         }
     }
 
-    public void executeTask(GenericKubernetesResource genericKubernetesResource) {
-
-    }
-
     public static void main(String[] args) {
         WorkflowTaskApp workflowTaskApp = new WorkflowTaskApp();
-        workflowTaskApp.startApp("default");
+        workflowTaskApp.start();
     }
 }
