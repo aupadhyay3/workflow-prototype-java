@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.Map;
@@ -15,8 +16,8 @@ public class TaskExecutor {
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutor.class);
 
     private final BlockingQueue<JSONObject> workQueue = new LinkedBlockingQueue<>();
-    private final String podName = System.getenv("HOSTNAME");
     private final WorkflowTask task;
+    private String podName;
     private final int threadPoolSize;
 
     private RawCustomResourceOperationsImpl api;
@@ -24,6 +25,11 @@ public class TaskExecutor {
     public TaskExecutor(WorkflowTask task, int threadPoolSize) {
         this.task = task;
         this.threadPoolSize = threadPoolSize;
+        try {
+            podName = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
 
     public void start(RawCustomResourceOperationsImpl api) {
@@ -72,13 +78,14 @@ public class TaskExecutor {
                             cr.updateStatus(updates.toString());
 
                             try {
-                                logger.debug("Task {} executing...", taskName);
+                                String taskType = task.getType();
+                                logger.debug("Task {} of type {} executing...", taskName, taskType);
 
                                 // execute task
                                 task.execute();
 
                                 taskCount += 1;
-                                logger.debug("Task {} completed. Executor total: {}", taskName, taskCount);
+                                logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
 
                                 //update state to completed
                                 status.put("state", TaskExecutionStates.COMPLETED.toString());
