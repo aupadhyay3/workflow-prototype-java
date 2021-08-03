@@ -27,13 +27,13 @@ public class TaskWatcher {
                 public void eventReceived(Action action, String resource) {
                     if (action == Action.ADDED) {
                         JSONObject json = new JSONObject(resource);
-                        String taskName = json.getJSONObject("spec").getString("type");
+                        String taskType = json.getJSONObject("spec").getString("type");
                         
-                        if (executors.containsKey(taskName)) {
-                            TaskExecutor executor = executors.get(taskName);
+                        if (executors.containsKey(taskType)) {
+                            TaskExecutor executor = executors.get(taskType);
                             executor.addTask(json);
                         } else {
-                            logger.error("No executor exists for task {}", taskName);
+                            logger.error("No executor exists for task type {}", taskType);
                         }
                     }
                 }

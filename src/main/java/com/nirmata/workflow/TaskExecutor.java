@@ -5,8 +5,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Map;
 import java.util.UUID;
 
 public class TaskExecutor {
@@ -39,6 +41,7 @@ public class TaskExecutor {
     private class ExecutorThread implements Runnable {
         private final UUID threadID = UUID.randomUUID();
         private final String executorName = podName + "-" + threadID;
+        private int taskCount = 0;
 
         @Override
         public void run() {
@@ -69,16 +72,19 @@ public class TaskExecutor {
                             cr.updateStatus(updates.toString());
 
                             try {
-                                logger.info("Task {} executing...", taskName);
+                                logger.debug("Task {} executing...", taskName);
 
                                 // execute task
                                 task.execute();
 
-                                logger.info("Task {} completed", taskName);
+                                taskCount += 1;
+                                logger.debug("Task {} completed. Executor total: {}", taskName, taskCount);
 
                                 //update state to completed
                                 status.put("state", TaskExecutionStates.COMPLETED.toString());
-                                cr.updateStatus(updates.toString());
+                                Map<String, Object> result = cr.updateStatus(updates.toString());
+
+                                logger.debug("Updated resource: {}", result);
 
                             } catch (Exception e) {
                                 logger.error("Task {} failed with exception {}", taskName, e);
