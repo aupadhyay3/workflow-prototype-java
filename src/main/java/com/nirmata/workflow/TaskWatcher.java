@@ -46,7 +46,7 @@ public class TaskWatcher {
                     }
                 }
             });
-            logger.info("Watch Started");
+            logger.info("Watch started");
 
         } catch (Exception e) {
             logger.error(e.getStackTrace().toString());
