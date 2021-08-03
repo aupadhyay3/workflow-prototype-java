@@ -66,4 +66,20 @@ public class WorkflowAppBuilder {
             instanceName = "unknown";
         }
     }
+
+    public static void main (String[] args) {
+        WorkflowTask wfTask = new WorkflowTask() {
+            @Override
+            public void execute() throws Exception {
+                TimeUnit.SECONDS.sleep(5);
+            }
+
+            @Override
+            public String getType() {
+                return "testType";
+            }
+        };
+        WorkflowApp workflowApp = new WorkflowAppBuilder().addTaskExecutor(wfTask, 3).build();
+        workflowApp.startApp();
+    }
 }

@@ -27,9 +27,9 @@ public class TaskWatcher {
                 public void eventReceived(Action action, String resource) {
                     if (action == Action.ADDED) {
                         JSONObject json = new JSONObject(resource);
-                        String taskName = json.getJSONObject("spec").getString("type");
-                        if (executors.containsKey(taskName)) {
-                            TaskExecutor executor = executors.get(taskName);
+                        String taskType = json.getJSONObject("spec").getString("type");
+                        if (executors.containsKey(taskType)) {
+                            TaskExecutor executor = executors.get(taskType);
                             executor.addTask(json);
                         }
                     }

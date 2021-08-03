@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.Map;
@@ -38,6 +39,7 @@ public class TaskExecutor {
 
     private class ExecutorThread implements Runnable {
         private String threadID = "TODO";
+        private int taskCount = 0;
 
         @Override
         public void run() {
@@ -56,10 +58,8 @@ public class TaskExecutor {
                             String taskType = typeString.substring(typeString.indexOf("=") + 1, typeString.indexOf("}"));
                 
                             if (taskType.equals(task.getType())) {
-                                logger.info("task and executor type match");
-                
                                 //set executor field using podname and an id
-                                String podName = System.getenv("HOSTNAME");
+                                String podName = InetAddress.getLocalHost().getHostName();
                                 String executorField = podName + UUID.randomUUID();
                                 JSONObject statusFields = new JSONObject().put("executor", executorField);
                                 JSONObject status = new JSONObject().put("status", statusFields);
@@ -76,8 +76,10 @@ public class TaskExecutor {
                                 //update state to completed
                                 statusFields.put("state", "COMPLETED");
                                 status.put("status", statusFields);
+                                taskCount += 1;
+                                logger.info("Task {} completed...Executor total: {}", taskName, taskCount);
                                 result = api.withName(taskName).updateStatus(status.toString());
-                                logger.info("{}", result);
+                                logger.info("Updated resource: {}", result);
                             }
                         } else {
                             workQueue.add(json);
