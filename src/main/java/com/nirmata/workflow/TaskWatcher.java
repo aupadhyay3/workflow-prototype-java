@@ -28,9 +28,12 @@ public class TaskWatcher {
                     if (action == Action.ADDED) {
                         JSONObject json = new JSONObject(resource);
                         String taskName = json.getJSONObject("spec").getString("type");
+                        
                         if (executors.containsKey(taskName)) {
                             TaskExecutor executor = executors.get(taskName);
                             executor.addTask(json);
+                        } else {
+                            logger.error("No executor exists for task {}", taskName);
                         }
                     }
                 }
@@ -46,7 +49,7 @@ public class TaskWatcher {
             logger.info("Watch Started");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.getStackTrace().toString());
         }
     }
 }

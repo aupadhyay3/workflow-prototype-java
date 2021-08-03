@@ -7,15 +7,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.Map;
 import java.util.UUID;
 
 public class TaskExecutor {
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutor.class);
 
+    private final BlockingQueue<JSONObject> workQueue = new LinkedBlockingQueue<>();
+    private final String podName = System.getenv("HOSTNAME");
     private final WorkflowTask task;
     private final int threadPoolSize;
-    private final BlockingQueue<JSONObject> workQueue = new LinkedBlockingQueue<>();
 
     private RawCustomResourceOperationsImpl api;
 
@@ -37,7 +37,8 @@ public class TaskExecutor {
     }
 
     private class ExecutorThread implements Runnable {
-        private String threadID = "TODO";
+        private final UUID threadID = UUID.randomUUID();
+        private final String executorName = podName + "-" + threadID;
 
         @Override
         public void run() {
@@ -47,40 +48,44 @@ public class TaskExecutor {
 
                     if (json != null) {
                         String taskName = json.getJSONObject("metadata").getString("name");
+                        RawCustomResourceOperationsImpl cr = api.withName(taskName);
 
-                        Map<String, Object> taskMap = api.withName(taskName).get();
+                        if (json.isNull("status") || json.getJSONObject("status").isNull("executor")) {
+                            JSONObject updates = new JSONObject();
 
-                        if (taskMap.get("status") == null || !taskMap.toString().contains("executor")) {
-                            //check whether task type matches executor type
-                            String typeString = taskMap.get("spec").toString();
-                            String taskType = typeString.substring(typeString.indexOf("=") + 1, typeString.indexOf("}"));
-                
-                            if (taskType.equals(task.getType())) {
-                                logger.info("task and executor type match");
-                
-                                //set executor field using podname and an id
-                                String podName = System.getenv("HOSTNAME");
-                                String executorField = podName + UUID.randomUUID();
-                                JSONObject statusFields = new JSONObject().put("executor", executorField);
-                                JSONObject status = new JSONObject().put("status", statusFields);
-                                Map<String, Object> result = null;
+                            JSONObject status;
+                            if (json.isNull("status")) {
+                                status = new JSONObject();
+                            } else {
+                                status = json.getJSONObject("status");
+                            }
+                            updates.put("status", status);
 
-                                //update state to executing
-                                statusFields.put("state", "EXECUTING");
-                                status.put("status", statusFields);
-                                result = api.withName(taskName).updateStatus(status.toString());
+                            //set executor field
+                            status.put("executor", executorName);
+
+                            //update state to executing
+                            status.put("state", TaskExecutionStates.EXECUTING.toString());
+                            cr.updateStatus(updates.toString());
+
+                            try {
                                 logger.info("Task {} executing...", taskName);
-            
+
+                                // execute task
                                 task.execute();
 
+                                logger.info("Task {} completed", taskName);
+
                                 //update state to completed
-                                statusFields.put("state", "COMPLETED");
-                                status.put("status", statusFields);
-                                result = api.withName(taskName).updateStatus(status.toString());
-                                logger.info("{}", result);
+                                status.put("state", TaskExecutionStates.COMPLETED.toString());
+                                cr.updateStatus(updates.toString());
+
+                            } catch (Exception e) {
+                                logger.error("Task {} failed with exception {}", taskName, e);
+
+                                status.put("state", TaskExecutionStates.FAILED.toString());
+                                cr.updateStatus(updates.toString());
                             }
-                        } else {
-                            workQueue.add(json);
                         }
                     }
                 } catch (Exception e) {
