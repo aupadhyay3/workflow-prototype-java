@@ -1,31 +1,37 @@
 package com.nirmata.workflow;
 
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
+
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Map;
 
-public class TaskWatch {
-    private static final Logger logger = LoggerFactory.getLogger(TaskWatch.class);
-    private BlockingQueue<String> workQueue;
+public class TaskWatcher {
+    private static final Logger logger = LoggerFactory.getLogger(TaskWatcher.class);
+    private final Map<String, TaskExecutor> executors;
+    private final RawCustomResourceOperationsImpl api;
 
-    public Queue<String> startWatch(RawCustomResourceOperationsImpl api) {
-        workQueue = new LinkedBlockingQueue<>();
+    public TaskWatcher(RawCustomResourceOperationsImpl api, Map<String, TaskExecutor> executors) {
+        this.api = api;
+        this.executors = executors;
+    }
 
+    public void start() {
         try {
             api.watch(new Watcher<String>() {
                 @Override
                 public void eventReceived(Action action, String resource) {
                     if (action == Action.ADDED) {
-                        workQueue.add(resource);
+                        JSONObject json = new JSONObject(resource);
+                        String taskName = json.getJSONObject("spec").getString("type");
+                        if (executors.containsKey(taskName)) {
+                            TaskExecutor executor = executors.get(taskName);
+                            executor.addTask(json);
+                        }
                     }
                 }
 
@@ -42,7 +48,5 @@ public class TaskWatch {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return workQueue;
     }
 }

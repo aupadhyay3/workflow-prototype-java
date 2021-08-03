@@ -5,49 +5,66 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.Map;
 import java.util.UUID;
-import java.util.Queue;
 
-public class TaskExecutor extends Thread {
+public class TaskExecutor {
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutor.class);
 
-    private final Queue<String> workQueue;
-    private final RawCustomResourceOperationsImpl api;
     private final WorkflowTask task;
+    private final int threadPoolSize;
+    private final BlockingQueue<JSONObject> workQueue = new LinkedBlockingQueue<>();
 
-    public TaskExecutor(Queue<String> workQueue, RawCustomResourceOperationsImpl api, WorkflowTask task) {
-        this.workQueue = workQueue;
-        this.api = api;
+    private RawCustomResourceOperationsImpl api;
+
+    public TaskExecutor(WorkflowTask task, int threadPoolSize) {
         this.task = task;
+        this.threadPoolSize = threadPoolSize;
     }
 
-    public void run() {
-        while (true) {
-            try {
-                String resource = workQueue.poll();
+    public void start(RawCustomResourceOperationsImpl api) {
+        this.api = api;
+        for (int i = 0; i < threadPoolSize; i++) {
+            Thread t = new Thread(new ExecutorThread());
+            t.start();
+        }
+    }
 
-                if (resource != null) {
-                    JSONObject json = new JSONObject(resource);
-                    String taskName = json.getJSONObject("metadata").getString("name");
+    public void addTask(JSONObject json) {
+        workQueue.add(json);
+    }
 
-                    Map<String, Object> taskMap = api.withName(taskName).get();
+    private class ExecutorThread implements Runnable {
+        private String threadID = "TODO";
 
-                    if (taskMap.get("status") == null || !taskMap.toString().contains("executor")) {
-                        //check whether task type matches executor type
-                        String typeString = taskMap.get("spec").toString();
-                        String taskType = typeString.substring(typeString.indexOf("=") + 1, typeString.indexOf("}"));
-            
-                        if (taskType.equals(task.getType())) {
-                            logger.info("task and executor type match");
-            
-                            //set executor field using podname and an id
-                            String podName = System.getenv("HOSTNAME");
-                            String executorField = podName + UUID.randomUUID();
-                            JSONObject statusFields = new JSONObject().put("executor", executorField);
-                            JSONObject status = new JSONObject().put("status", statusFields);
-                            Map<String, Object> result = null;
-                            try {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    JSONObject json = workQueue.poll();
+
+                    if (json != null) {
+                        String taskName = json.getJSONObject("metadata").getString("name");
+
+                        Map<String, Object> taskMap = api.withName(taskName).get();
+
+                        if (taskMap.get("status") == null || !taskMap.toString().contains("executor")) {
+                            //check whether task type matches executor type
+                            String typeString = taskMap.get("spec").toString();
+                            String taskType = typeString.substring(typeString.indexOf("=") + 1, typeString.indexOf("}"));
+                
+                            if (taskType.equals(task.getType())) {
+                                logger.info("task and executor type match");
+                
+                                //set executor field using podname and an id
+                                String podName = System.getenv("HOSTNAME");
+                                String executorField = podName + UUID.randomUUID();
+                                JSONObject statusFields = new JSONObject().put("executor", executorField);
+                                JSONObject status = new JSONObject().put("status", statusFields);
+                                Map<String, Object> result = null;
+
                                 //update state to executing
                                 statusFields.put("state", "EXECUTING");
                                 status.put("status", statusFields);
@@ -61,16 +78,14 @@ public class TaskExecutor extends Thread {
                                 status.put("status", statusFields);
                                 result = api.withName(taskName).updateStatus(status.toString());
                                 logger.info("{}", result);
-                            } catch (Exception e) {
-                                e.printStackTrace();
                             }
+                        } else {
+                            workQueue.add(json);
                         }
-                    } else {
-                        workQueue.add(resource);
                     }
+                } catch (Exception e) {
+                    logger.error(e.getStackTrace().toString());
                 }
-            } catch (Exception e) {
-                logger.error(e.getStackTrace().toString());
             }
         }
     }

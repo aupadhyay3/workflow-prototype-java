@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 public class TestTask implements WorkflowTask {
-    private static final String TaskType = "Test";
+    private static final String TaskType = "testType";
     private static final Logger logger = LoggerFactory.getLogger(TestTask.class);
 
     @Override
