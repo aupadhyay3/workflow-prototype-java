@@ -17,8 +17,8 @@ public class TaskExecutor {
 
     private final BlockingQueue<JSONObject> workQueue = new LinkedBlockingQueue<>();
     private final Task task;
-    private String podName;
     private final int threadPoolSize;
+    private String podName;
 
     private RawCustomResourceOperationsImpl api;
 
@@ -28,14 +28,15 @@ public class TaskExecutor {
         try {
             podName = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            logger.error(e.getStackTrace().toString());
+            podName = "unknown";
         }
     }
 
     public void start(RawCustomResourceOperationsImpl api) {
         this.api = api;
         for (int i = 0; i < threadPoolSize; i++) {
-            Thread t = new Thread(new ExecutorThread());
+            Thread t = new ExecutorThread();
             t.start();
         }
     }
@@ -44,13 +45,12 @@ public class TaskExecutor {
         workQueue.add(json);
     }
 
-    private class ExecutorThread implements Runnable {
-        private final UUID threadID = UUID.randomUUID();
-        private final String executorName = podName + "-" + threadID;
-        private int taskCount = 0;
-
+    private class ExecutorThread extends Thread {
         @Override
         public void run() {
+            String executorName = podName + "-" + getId();
+            int taskCount = 0;
+
             while (true) {
                 try {
                     JSONObject json = workQueue.poll();
