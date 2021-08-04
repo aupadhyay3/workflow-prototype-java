@@ -3,7 +3,6 @@ package com.nirmata.workflow;
 import com.google.common.base.Preconditions;
 import com.nirmata.workflow.task.Task;
 import com.nirmata.workflow.task.TaskExecutor;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -16,12 +15,6 @@ public class WorkflowAppBuilder {
     private String namespace = "default";
     private TimeUnit timeoutUnits = TimeUnit.MINUTES;
     private long timeout = 10;
-    private CustomResourceDefinitionContext context = new CustomResourceDefinitionContext.Builder()
-        .withVersion("v1")
-        .withGroup("nirmata.com")
-        .withScope("Namespaced")
-        .withPlural("workflowtasks")
-        .build();
 
     private final Map<String, TaskExecutor> executors = new HashMap<>();
 
@@ -52,13 +45,8 @@ public class WorkflowAppBuilder {
         return this;
     }
 
-    public WorkflowAppBuilder withContext(CustomResourceDefinitionContext context) {
-        this.context = Preconditions.checkNotNull(context, "namespace cannot be null");
-        return this;
-    }
-
     public WorkflowApp build() {
-        return new WorkflowApp(instanceName, namespace, timeoutUnits, timeout, context, executors);
+        return new WorkflowApp(instanceName, namespace, timeoutUnits, timeout, executors);
     }
 
     private WorkflowAppBuilder() {

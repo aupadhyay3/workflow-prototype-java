@@ -1,13 +1,10 @@
 package com.nirmata.workflow.task;
 
-import com.nirmata.workflow.WorkflowApp;
 import com.nirmata.workflow.crd.WorkflowTask;
 import com.nirmata.workflow.crd.WorkflowTaskStatus;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +12,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.Map;
-import java.util.UUID;
 
 public class TaskExecutor {
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutor.class);
@@ -26,8 +21,7 @@ public class TaskExecutor {
     private final int threadPoolSize;
     private String podName;
 
-    private static MixedOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>,
-            Resource<WorkflowTask>> workflowTaskClient = null;
+    private NonNamespaceOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>, Resource<WorkflowTask>> api;
 
     public TaskExecutor(Task task, int threadPoolSize) {
         this.task = task;
@@ -35,14 +29,15 @@ public class TaskExecutor {
         try {
             podName = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            logger.error(e.getStackTrace().toString());
+            e.printStackTrace();
+            //logger.error(e.getStackTrace().toString());
             podName = "unknown";
         }
     }
 
-    public void start(MixedOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>,
-            Resource<WorkflowTask>> workflowTaskClient) {
-        this.workflowTaskClient = workflowTaskClient;
+    public void start(NonNamespaceOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>,
+            Resource<WorkflowTask>> api) {
+        this.api = api;
         for (int i = 0; i < threadPoolSize; i++) {
             Thread t = new ExecutorThread();
             t.start();
@@ -65,27 +60,27 @@ public class TaskExecutor {
 
                     if (queuedTask != null) {
                         String taskName = queuedTask.getCRDName();
-                        Resource cr = workflowTaskClient.withName(taskName);
-                        //RawCustomResourceOperationsImpl cr = api.withName(taskName);
+                        Resource<WorkflowTask> cr = api.withName(taskName);
 
                         //System.out.println("status" + queuedTask.getStatus());
                         //System.out.println("executor" + queuedTask.getStatus().getExecutor());
                         if (queuedTask.getStatus() == null || queuedTask.getStatus().getExecutor() == null) {
                             //JSONObject updates = new JSONObject();
 
+                            WorkflowTaskStatus status;
                             if (queuedTask.getStatus() == null) {
-                                queuedTask.setStatus(new WorkflowTaskStatus());
+                                status = new WorkflowTaskStatus();
+                            } else {
+                                status = queuedTask.getStatus();
                             }
-                            WorkflowTaskStatus status = queuedTask.getStatus();
-                            //updates.put("status", status);
+                            queuedTask.setStatus(status);
 
                             //set executor field
                             status.setExecutor(executorName);
 
                             //update state to executing
                             status.setState(TaskExecutionState.EXECUTING);
-                            //cr.updateStatus(updates.toString());
-                            cr.replaceStatus(status);
+                            cr.replaceStatus(queuedTask);
 
                             try {
                                 String taskType = queuedTask.getSpec().getType();
@@ -99,22 +94,21 @@ public class TaskExecutor {
 
                                 //update state to completed
                                 status.setState(TaskExecutionState.COMPLETED);
-                                cr.replaceStatus(status);
-                                //Map<String, Object> result = cr.updateStatus(updates.toString());
+                                WorkflowTask result = cr.replaceStatus(queuedTask);
 
-                                logger.debug("Updated resource: {}", cr);
+                                logger.debug("Updated resource: {}", result);
 
                             } catch (Exception e) {
                                 logger.error("Task {} failed with exception {}", taskName, e);
 
                                 status.setState(TaskExecutionState.FAILED);
-                                cr.replaceStatus(status);
-                                //cr.updateStatus(updates.toString());
+                                cr.replaceStatus(queuedTask);
                             }
                         }
                     }
                 } catch (Exception e) {
-                    logger.error(e.getStackTrace().toString());
+                    e.printStackTrace();
+                    //logger.error(e.getStackTrace().toString());
                 }
             }
         }

@@ -15,7 +15,7 @@ public class WorkflowAppBuilderTest {
 
             @Override
             public String getType() {
-                return "testTypeA";
+                return "testType";
             }
         };
 
