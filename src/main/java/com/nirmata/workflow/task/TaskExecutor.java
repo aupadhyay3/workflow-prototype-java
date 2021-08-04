@@ -1,4 +1,4 @@
-package com.nirmata.workflow;
+package com.nirmata.workflow.task;
 
 import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
 import org.json.JSONObject;
@@ -16,13 +16,13 @@ public class TaskExecutor {
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutor.class);
 
     private final BlockingQueue<JSONObject> workQueue = new LinkedBlockingQueue<>();
-    private final WorkflowTask task;
+    private final Task task;
     private String podName;
     private final int threadPoolSize;
 
     private RawCustomResourceOperationsImpl api;
 
-    public TaskExecutor(WorkflowTask task, int threadPoolSize) {
+    public TaskExecutor(Task task, int threadPoolSize) {
         this.task = task;
         this.threadPoolSize = threadPoolSize;
         try {
@@ -74,7 +74,7 @@ public class TaskExecutor {
                             status.put("executor", executorName);
 
                             //update state to executing
-                            status.put("state", TaskExecutionStates.EXECUTING.toString());
+                            status.put("state", TaskExecutionState.EXECUTING.toString());
                             cr.updateStatus(updates.toString());
 
                             try {
@@ -88,7 +88,7 @@ public class TaskExecutor {
                                 logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
 
                                 //update state to completed
-                                status.put("state", TaskExecutionStates.COMPLETED.toString());
+                                status.put("state", TaskExecutionState.COMPLETED.toString());
                                 Map<String, Object> result = cr.updateStatus(updates.toString());
 
                                 logger.debug("Updated resource: {}", result);
@@ -96,7 +96,7 @@ public class TaskExecutor {
                             } catch (Exception e) {
                                 logger.error("Task {} failed with exception {}", taskName, e);
 
-                                status.put("state", TaskExecutionStates.FAILED.toString());
+                                status.put("state", TaskExecutionState.FAILED.toString());
                                 cr.updateStatus(updates.toString());
                             }
                         }

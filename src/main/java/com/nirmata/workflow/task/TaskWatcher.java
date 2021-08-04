@@ -1,4 +1,4 @@
-package com.nirmata.workflow;
+package com.nirmata.workflow.task;
 
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;

@@ -1,6 +1,6 @@
-package com.nirmata.workflow;
+package com.nirmata.workflow.task;
 
-public interface WorkflowTask {
+public interface Task {
     public void execute() throws Exception;
 
     public String getType();

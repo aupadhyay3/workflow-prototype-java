@@ -2,10 +2,12 @@ package com.nirmata.workflow;
 
 import java.util.concurrent.TimeUnit;
 
+import com.nirmata.workflow.task.Task;
+
 public class WorkflowAppBuilderTest {
     private static final int THREAD_POOL_SIZE = 3;
     public static void main (String[] args) {
-        WorkflowTask wfTaskA = new WorkflowTask() {
+        Task wfTaskA = new Task() {
             @Override
             public void execute() throws Exception {
                 TimeUnit.SECONDS.sleep(5);
@@ -17,7 +19,7 @@ public class WorkflowAppBuilderTest {
             }
         };
 
-        WorkflowTask wfTaskB = new WorkflowTask() {
+        Task wfTaskB = new Task() {
             @Override
             public void execute() throws Exception {
                 TimeUnit.SECONDS.sleep(5);
@@ -39,7 +41,7 @@ public class WorkflowAppBuilderTest {
      * @param taskType WorkflowTask object's type field which will be matched with its respective executor
      * @param executors Number of executors
      */
-    public static void testOneTaskType (WorkflowTask taskType, int executors) {
+    public static void testOneTaskType (Task taskType, int executors) {
         WorkflowApp workflowApp = WorkflowAppBuilder.builder().addTaskExecutor(taskType, executors).build();
         workflowApp.startApp();
     }
@@ -51,7 +53,7 @@ public class WorkflowAppBuilderTest {
      * @param taskType2, WorkflowTask object's type field which will be matched with its respective executor
      * @param executors Number of executors
      */
-    public static void testTwoTaskTypes (WorkflowTask taskType1, WorkflowTask taskType2,  int executors) {
+    public static void testTwoTaskTypes (Task taskType1, Task taskType2,  int executors) {
         WorkflowApp workflowApp = WorkflowAppBuilder.builder().addTaskExecutor(taskType1, THREAD_POOL_SIZE).
                 addTaskExecutor(taskType2, THREAD_POOL_SIZE).build();
         workflowApp.startApp();

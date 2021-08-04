@@ -1,6 +1,8 @@
 package com.nirmata.workflow;
 
 import com.google.common.base.Preconditions;
+import com.nirmata.workflow.task.Task;
+import com.nirmata.workflow.task.TaskExecutor;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 import java.net.InetAddress;
@@ -27,7 +29,7 @@ public class WorkflowAppBuilder {
         return new WorkflowAppBuilder();
     }
 
-    public WorkflowAppBuilder addTaskExecutor(WorkflowTask task, int threadPoolSize) {
+    public WorkflowAppBuilder addTaskExecutor(Task task, int threadPoolSize) {
         String taskType = task.getType();
         TaskExecutor taskExecutor = new TaskExecutor(task, threadPoolSize);
         executors.put(taskType, taskExecutor);
