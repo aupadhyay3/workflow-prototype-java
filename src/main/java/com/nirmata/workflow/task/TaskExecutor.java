@@ -60,27 +60,25 @@ public class TaskExecutor {
 
                     if (queuedTask != null) {
                         String taskName = queuedTask.getCRDName();
-                        Resource<WorkflowTask> cr = api.withName(taskName);
 
                         //System.out.println("status" + queuedTask.getStatus());
                         //System.out.println("executor" + queuedTask.getStatus().getExecutor());
                         if (queuedTask.getStatus() == null || queuedTask.getStatus().getExecutor() == null) {
-                            //JSONObject updates = new JSONObject();
 
                             WorkflowTaskStatus status;
                             if (queuedTask.getStatus() == null) {
                                 status = new WorkflowTaskStatus();
+                                queuedTask.setStatus(status);
                             } else {
                                 status = queuedTask.getStatus();
                             }
-                            queuedTask.setStatus(status);
 
                             //set executor field
                             status.setExecutor(executorName);
 
                             //update state to executing
                             status.setState(TaskExecutionState.EXECUTING);
-                            cr.replaceStatus(queuedTask);
+                            api.replaceStatus(queuedTask);
 
                             try {
                                 String taskType = queuedTask.getSpec().getType();
@@ -94,7 +92,7 @@ public class TaskExecutor {
 
                                 //update state to completed
                                 status.setState(TaskExecutionState.COMPLETED);
-                                WorkflowTask result = cr.replaceStatus(queuedTask);
+                                WorkflowTask result = api.replaceStatus(queuedTask);
 
                                 logger.debug("Updated resource: {}", result);
 
@@ -102,7 +100,7 @@ public class TaskExecutor {
                                 logger.error("Task {} failed with exception {}", taskName, e);
 
                                 status.setState(TaskExecutionState.FAILED);
-                                cr.replaceStatus(queuedTask);
+                                api.replaceStatus(queuedTask);
                             }
                         }
                     }
