@@ -1,10 +1,14 @@
 package com.nirmata.workflow;
 
 import com.google.common.base.Preconditions;
+import com.nirmata.workflow.crd.WorkflowTask;
 import com.nirmata.workflow.task.TaskExecutor;
 import com.nirmata.workflow.task.TaskWatcher;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
 
@@ -18,6 +22,8 @@ public class WorkflowApp {
     private final long timeout;
     private final CustomResourceDefinitionContext context;
     private final Map<String, TaskExecutor> executors;
+    private static MixedOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>,
+            Resource<WorkflowTask>> workflowTaskClient = null;
 
     public WorkflowApp(String instanceName, String namespace, TimeUnit timeoutUnits, long timeout, CustomResourceDefinitionContext context, Map<String, TaskExecutor> executors) {
         this.instanceName = Preconditions.checkNotNull(instanceName, "instanceName cannot be null");
@@ -30,13 +36,14 @@ public class WorkflowApp {
 
     public void startApp() {
         try (KubernetesClient client = new DefaultKubernetesClient()) {
-            RawCustomResourceOperationsImpl api = client.customResource(context).inNamespace(namespace);
+            //RawCustomResourceOperationsImpl api = client.customResource(context).inNamespace(namespace);
+            workflowTaskClient = client.customResources(WorkflowTask.class);
 
-            TaskWatcher watch = new TaskWatcher(api, executors);
+            TaskWatcher watch = new TaskWatcher(workflowTaskClient, namespace, executors);
             watch.start();
 
             for (Map.Entry<String, TaskExecutor> e : executors.entrySet()) {
-                e.getValue().start(api);
+                e.getValue().start(workflowTaskClient);
             }
 
             timeoutUnits.sleep(timeout);

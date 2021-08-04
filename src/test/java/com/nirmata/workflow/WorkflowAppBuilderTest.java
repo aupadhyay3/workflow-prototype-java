@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit;
 import com.nirmata.workflow.task.Task;
 
 public class WorkflowAppBuilderTest {
-    private static final int THREAD_POOL_SIZE = 3;
+    private static final int THREAD_POOL_SIZE = 1;
     public static void main (String[] args) {
         Task wfTaskA = new Task() {
             @Override
@@ -31,8 +31,8 @@ public class WorkflowAppBuilderTest {
             }
         };
 
-        //testOneTaskType(wfTaskA, THREAD_POOL_SIZE);
-        testTwoTaskTypes(wfTaskA, wfTaskB, THREAD_POOL_SIZE);
+        testOneTaskType(wfTaskA, THREAD_POOL_SIZE);
+        //testTwoTaskTypes(wfTaskA, wfTaskB, THREAD_POOL_SIZE);
     }
 
     /**

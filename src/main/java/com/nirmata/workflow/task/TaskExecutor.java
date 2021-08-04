@@ -1,5 +1,11 @@
 package com.nirmata.workflow.task;
 
+import com.nirmata.workflow.WorkflowApp;
+import com.nirmata.workflow.crd.WorkflowTask;
+import com.nirmata.workflow.crd.WorkflowTaskStatus;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -15,12 +21,13 @@ import java.util.UUID;
 public class TaskExecutor {
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutor.class);
 
-    private final BlockingQueue<JSONObject> workQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<WorkflowTask> workQueue = new LinkedBlockingQueue<>();
     private final Task task;
     private String podName;
     private final int threadPoolSize;
 
-    private RawCustomResourceOperationsImpl api;
+    private static MixedOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>,
+            Resource<WorkflowTask>> workflowTaskClient = null;
 
     public TaskExecutor(Task task, int threadPoolSize) {
         this.task = task;
@@ -32,16 +39,17 @@ public class TaskExecutor {
         }
     }
 
-    public void start(RawCustomResourceOperationsImpl api) {
-        this.api = api;
+    public void start(MixedOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>,
+            Resource<WorkflowTask>> workflowTaskClient) {
+        this.workflowTaskClient = workflowTaskClient;
         for (int i = 0; i < threadPoolSize; i++) {
             Thread t = new Thread(new ExecutorThread());
             t.start();
         }
     }
 
-    public void addTask(JSONObject json) {
-        workQueue.add(json);
+    public void addTask(WorkflowTask workflowTask) {
+        workQueue.add(workflowTask);
     }
 
     private class ExecutorThread implements Runnable {
@@ -53,32 +61,34 @@ public class TaskExecutor {
         public void run() {
             while (true) {
                 try {
-                    JSONObject json = workQueue.poll();
+                    WorkflowTask queuedTask = workQueue.poll();
 
-                    if (json != null) {
-                        String taskName = json.getJSONObject("metadata").getString("name");
-                        RawCustomResourceOperationsImpl cr = api.withName(taskName);
+                    if (queuedTask != null) {
+                        String taskName = queuedTask.getCRDName();
+                        Resource cr = workflowTaskClient.withName(taskName);
+                        //RawCustomResourceOperationsImpl cr = api.withName(taskName);
 
-                        if (json.isNull("status") || json.getJSONObject("status").isNull("executor")) {
-                            JSONObject updates = new JSONObject();
+                        //System.out.println("status" + queuedTask.getStatus());
+                        //System.out.println("executor" + queuedTask.getStatus().getExecutor());
+                        if (queuedTask.getStatus() == null || queuedTask.getStatus().getExecutor() == null) {
+                            //JSONObject updates = new JSONObject();
 
-                            JSONObject status;
-                            if (json.isNull("status")) {
-                                status = new JSONObject();
-                            } else {
-                                status = json.getJSONObject("status");
+                            if (queuedTask.getStatus() == null) {
+                                queuedTask.setStatus(new WorkflowTaskStatus());
                             }
-                            updates.put("status", status);
+                            WorkflowTaskStatus status = queuedTask.getStatus();
+                            //updates.put("status", status);
 
                             //set executor field
-                            status.put("executor", executorName);
+                            status.setExecutor(executorName);
 
                             //update state to executing
-                            status.put("state", TaskExecutionState.EXECUTING.toString());
-                            cr.updateStatus(updates.toString());
+                            status.setState(TaskExecutionState.EXECUTING);
+                            //cr.updateStatus(updates.toString());
+                            cr.replaceStatus(status);
 
                             try {
-                                String taskType = task.getType();
+                                String taskType = queuedTask.getSpec().getType();
                                 logger.debug("Task {} of type {} executing...", taskName, taskType);
 
                                 // execute task
@@ -88,16 +98,18 @@ public class TaskExecutor {
                                 logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
 
                                 //update state to completed
-                                status.put("state", TaskExecutionState.COMPLETED.toString());
-                                Map<String, Object> result = cr.updateStatus(updates.toString());
+                                status.setState(TaskExecutionState.COMPLETED);
+                                cr.replaceStatus(status);
+                                //Map<String, Object> result = cr.updateStatus(updates.toString());
 
-                                logger.debug("Updated resource: {}", result);
+                                logger.debug("Updated resource: {}", cr);
 
                             } catch (Exception e) {
                                 logger.error("Task {} failed with exception {}", taskName, e);
 
-                                status.put("state", TaskExecutionState.FAILED.toString());
-                                cr.updateStatus(updates.toString());
+                                status.setState(TaskExecutionState.FAILED);
+                                cr.replaceStatus(status);
+                                //cr.updateStatus(updates.toString());
                             }
                         }
                     }
