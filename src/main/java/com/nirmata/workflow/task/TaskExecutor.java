@@ -30,7 +30,6 @@ public class TaskExecutor {
             podName = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
             e.printStackTrace();
-            //logger.error(e.getStackTrace().toString());
             podName = "unknown";
         }
     }
@@ -59,10 +58,8 @@ public class TaskExecutor {
                     WorkflowTask queuedTask = workQueue.poll();
 
                     if (queuedTask != null) {
-                        String taskName = queuedTask.getCRDName();
+                        String taskName = queuedTask.getMetadata().getName();
 
-                        //System.out.println("status" + queuedTask.getStatus());
-                        //System.out.println("executor" + queuedTask.getStatus().getExecutor());
                         if (queuedTask.getStatus() == null || queuedTask.getStatus().getExecutor() == null) {
 
                             WorkflowTaskStatus status;
@@ -85,7 +82,7 @@ public class TaskExecutor {
                                 logger.debug("Task {} of type {} executing...", taskName, taskType);
 
                                 // execute task
-                                task.execute();
+                                task.execute(queuedTask);
 
                                 taskCount += 1;
                                 logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
@@ -106,7 +103,6 @@ public class TaskExecutor {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    //logger.error(e.getStackTrace().toString());
                 }
             }
         }

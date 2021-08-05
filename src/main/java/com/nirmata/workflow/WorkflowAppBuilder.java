@@ -3,23 +3,27 @@ package com.nirmata.workflow;
 import com.google.common.base.Preconditions;
 import com.nirmata.workflow.task.Task;
 import com.nirmata.workflow.task.TaskExecutor;
+import io.fabric8.kubernetes.client.KubernetesClient;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
 
 public class WorkflowAppBuilder {
+    private KubernetesClient client;
     private String instanceName;
     private String namespace = "default";
-    private TimeUnit timeoutUnits = TimeUnit.MINUTES;
-    private long timeout = 10;
 
     private final Map<String, TaskExecutor> executors = new HashMap<>();
 
     public static WorkflowAppBuilder builder() {
         return new WorkflowAppBuilder();
+    }
+
+    public WorkflowAppBuilder withClient(KubernetesClient client) {
+        this.client = Preconditions.checkNotNull(client, "client cannot be null");
+        return this;
     }
 
     public WorkflowAppBuilder addTaskExecutor(Task task, int threadPoolSize) {
@@ -39,14 +43,8 @@ public class WorkflowAppBuilder {
         return this;
     }
 
-    public WorkflowAppBuilder withTimeout(TimeUnit timeoutUnits, long timeout) {
-        this.timeoutUnits = Preconditions.checkNotNull(timeoutUnits, "timeoutUnits cannot be null");
-        this.timeout = Preconditions.checkNotNull(timeout, "timeout cannot be null");
-        return this;
-    }
-
     public WorkflowApp build() {
-        return new WorkflowApp(instanceName, namespace, timeoutUnits, timeout, executors);
+        return new WorkflowApp(client, instanceName, namespace, executors);
     }
 
     private WorkflowAppBuilder() {
