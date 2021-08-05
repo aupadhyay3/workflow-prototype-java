@@ -75,7 +75,7 @@ public class TaskExecutor {
 
                             //update state to executing
                             status.setState(TaskExecutionState.EXECUTING);
-                            api.replaceStatus(queuedTask);
+                            api.patchStatus(queuedTask);
 
                             try {
                                 String taskType = queuedTask.getSpec().getType();
@@ -89,7 +89,7 @@ public class TaskExecutor {
 
                                 //update state to completed
                                 status.setState(TaskExecutionState.COMPLETED);
-                                WorkflowTask result = api.replaceStatus(queuedTask);
+                                WorkflowTask result = api.patchStatus(queuedTask);
 
                                 logger.debug("Updated resource: {}", result);
 
@@ -97,7 +97,7 @@ public class TaskExecutor {
                                 logger.error("Task {} failed with exception {}", taskName, e);
 
                                 status.setState(TaskExecutionState.FAILED);
-                                api.replaceStatus(queuedTask);
+                                api.patchStatus(queuedTask);
                             }
                         }
                     }
