@@ -1,14 +1,15 @@
 package com.nirmata.workflow;
 
 import com.google.common.base.Preconditions;
-import com.nirmata.workflow.task.Task;
-import com.nirmata.workflow.task.TaskExecutor;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 public class WorkflowAppBuilder {
     private KubernetesClient client;
@@ -28,8 +29,19 @@ public class WorkflowAppBuilder {
 
     public WorkflowAppBuilder addTaskExecutor(Task task, int threadPoolSize) {
         String taskType = task.getType();
-        TaskExecutor taskExecutor = new TaskExecutor(task, threadPoolSize);
-        executors.put(taskType, taskExecutor);
+        executors.put(taskType, new TaskExecutor(task, threadPoolSize));
+        return this;
+    }
+
+    public WorkflowAppBuilder addTaskExecutor(Task task, int threadPoolSize, long threadKeepAliveTime, TimeUnit unit) {
+        String taskType = task.getType();
+        executors.put(taskType, new TaskExecutor(task, threadPoolSize, threadKeepAliveTime, unit));
+        return this;
+    }
+
+    public WorkflowAppBuilder addTaskExecutor(Task task, Executor executor) {
+        String taskType = task.getType();
+        executors.put(taskType, new TaskExecutor(task, executor));
         return this;
     }
 

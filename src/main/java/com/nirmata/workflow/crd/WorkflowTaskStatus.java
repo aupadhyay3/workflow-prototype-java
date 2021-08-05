@@ -1,13 +1,17 @@
 package com.nirmata.workflow.crd;
 
-import com.nirmata.workflow.task.TaskExecutionState;
-
 public class WorkflowTaskStatus {
     private String state;
     private String startTimeUTC;
     private String completionTimeUTC;
     private String executor;
     private String error;
+
+    public enum ExecutionState {
+        EXECUTING,
+        COMPLETED,
+        FAILED
+    }
 
     public String getState() {
         return state;
@@ -17,7 +21,7 @@ public class WorkflowTaskStatus {
         this.state = state;
     }
 
-    public void setState(TaskExecutionState state) {
+    public void setState(ExecutionState state) {
         this.state = state.toString();
     }
 

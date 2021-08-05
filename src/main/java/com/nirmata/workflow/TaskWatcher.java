@@ -1,6 +1,7 @@
-package com.nirmata.workflow.task;
+package com.nirmata.workflow;
 
 import com.nirmata.workflow.crd.WorkflowTask;
+
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
@@ -11,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-public class TaskWatcher {
+class TaskWatcher {
     private static final Logger logger = LoggerFactory.getLogger(TaskWatcher.class);
 
     private NonNamespaceOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>, 
@@ -27,13 +28,13 @@ public class TaskWatcher {
     public void start() {
         api.watch(new Watcher<WorkflowTask>() {
             @Override
-            public void eventReceived(Action action, WorkflowTask workflowTask) {
+            public void eventReceived(Action action, WorkflowTask taskResource) {
                 if (action == Action.ADDED) {
                     //logger.info("task added");
-                    String taskType = workflowTask.getSpec().getType();
+                    String taskType = taskResource.getSpec().getType();
                     if (executors.containsKey(taskType)) {
                         TaskExecutor executor = executors.get(taskType);
-                        executor.addTask(workflowTask);
+                        executor.execute(taskResource);
                     }
                 }
             }

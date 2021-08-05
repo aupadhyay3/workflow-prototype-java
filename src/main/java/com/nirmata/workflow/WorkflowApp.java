@@ -2,8 +2,7 @@ package com.nirmata.workflow;
 
 import com.google.common.base.Preconditions;
 import com.nirmata.workflow.crd.WorkflowTask;
-import com.nirmata.workflow.task.TaskExecutor;
-import com.nirmata.workflow.task.TaskWatcher;
+
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
@@ -29,15 +28,15 @@ public class WorkflowApp {
             NonNamespaceOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>, 
                 Resource<WorkflowTask>> api = client.customResources(WorkflowTask.class).inNamespace(namespace);
 
+            for (Map.Entry<String, TaskExecutor> e : executors.entrySet()) {
+                e.getValue().initialize(api);
+            }
+
             TaskWatcher watch = new TaskWatcher(api, executors);
             watch.start();
 
-            for (Map.Entry<String, TaskExecutor> e : executors.entrySet()) {
-                e.getValue().start(api);
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 }

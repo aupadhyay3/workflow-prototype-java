@@ -1,4 +1,4 @@
-package com.nirmata.workflow.task;
+package com.nirmata.workflow;
 
 import com.nirmata.workflow.crd.WorkflowTask;
 

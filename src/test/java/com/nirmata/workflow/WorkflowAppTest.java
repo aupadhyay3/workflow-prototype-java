@@ -2,7 +2,7 @@ package com.nirmata.workflow;
 
 import com.nirmata.workflow.crd.WorkflowTask;
 import com.nirmata.workflow.crd.WorkflowTaskSpec;
-import com.nirmata.workflow.task.Task;
+
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class WorkflowAppTest {
     private static final int NUM_TASKS = 10;
     private static final int TASK_SLEEP_TIME_SECONDS = 5;
-    private static final int THREAD_POOL_SIZE = 2;
+    private static final int THREAD_POOL_SIZE = 3;
     private static final int NUM_INSTANCES = 2;
     private static final int TEST_TIMEOUT_MINUTES = 5;
 
