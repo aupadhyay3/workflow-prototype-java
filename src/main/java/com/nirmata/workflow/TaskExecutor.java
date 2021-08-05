@@ -53,14 +53,6 @@ class TaskExecutor {
         this.api = api;
     }
 
-    public void initialize(KubernetesClient client, String namespace) {
-        this.api = client.customResources(WorkflowTask.class).inNamespace(namespace);
-    }
-
-    public Task getTask() {
-        return task;
-    }
-
     public void execute(WorkflowTask taskResource) {
         executor.execute(new TaskExecution(taskResource));
     }
@@ -112,7 +104,7 @@ class TaskExecutor {
                             logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
 
                             //update state to completed
-                            status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
+                            status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
                             api.replaceStatus(taskResource);
 
                             //logger.debug("Updated resource: {}", result);
@@ -120,7 +112,7 @@ class TaskExecutor {
                         } catch (Exception e) {
                             logger.error("Task {} failed with exception {}", taskName, e);
 
-                            status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
+                            status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
                             api.replaceStatus(taskResource);
                         }
                     }

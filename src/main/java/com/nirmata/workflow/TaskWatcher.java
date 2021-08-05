@@ -30,7 +30,6 @@ class TaskWatcher {
             @Override
             public void eventReceived(Action action, WorkflowTask taskResource) {
                 if (action == Action.ADDED) {
-                    //logger.info("task added");
                     String taskType = taskResource.getSpec().getType();
                     if (executors.containsKey(taskType)) {
                         TaskExecutor executor = executors.get(taskType);
@@ -41,11 +40,12 @@ class TaskWatcher {
 
             @Override
             public void onClose(WatcherException e) {
-                logger.info("Closing watch");
+                logger.info("Closing WorkflowTask watch");
                 if (e != null) {
                     logger.info(e.getMessage());
                 }
             }
         });
+        logger.info("WorkflowTask watch started");
     }
 }
