@@ -29,7 +29,7 @@ public class TaskWatcher {
             @Override
             public void eventReceived(Action action, WorkflowTask workflowTask) {
                 if (action == Action.ADDED) {
-                    logger.info("task added");
+                    //logger.info("task added");
                     String taskType = workflowTask.getSpec().getType();
                     if (executors.containsKey(taskType)) {
                         TaskExecutor executor = executors.get(taskType);

@@ -3,6 +3,7 @@ package com.nirmata.workflow.task;
 import com.nirmata.workflow.crd.WorkflowTask;
 import com.nirmata.workflow.crd.WorkflowTaskStatus;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import org.slf4j.Logger;
@@ -75,7 +76,12 @@ public class TaskExecutor {
 
                             //update state to executing
                             status.setState(TaskExecutionState.EXECUTING);
-                            api.patchStatus(queuedTask);
+                            try {
+                                api.patchStatus(queuedTask);
+                            } catch (KubernetesClientException e) {
+                                //System.out.println("executor already set");
+                                continue;
+                            }
 
                             try {
                                 String taskType = queuedTask.getSpec().getType();
@@ -89,15 +95,15 @@ public class TaskExecutor {
 
                                 //update state to completed
                                 status.setState(TaskExecutionState.COMPLETED);
-                                WorkflowTask result = api.patchStatus(queuedTask);
+                                api.replaceStatus(queuedTask);
 
-                                logger.debug("Updated resource: {}", result);
+                                //logger.debug("Updated resource: {}", result);
 
                             } catch (Exception e) {
                                 logger.error("Task {} failed with exception {}", taskName, e);
 
                                 status.setState(TaskExecutionState.FAILED);
-                                api.patchStatus(queuedTask);
+                                api.replaceStatus(queuedTask);
                             }
                         }
                     }

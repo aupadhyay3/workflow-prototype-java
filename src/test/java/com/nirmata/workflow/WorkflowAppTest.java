@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class WorkflowAppTest {
     private static final int NUM_TASKS = 10;
     private static final int TASK_SLEEP_TIME_SECONDS = 5;
-    private static final int THREAD_POOL_SIZE = 3;
+    private static final int THREAD_POOL_SIZE = 2;
     private static final int NUM_INSTANCES = 2;
     private static final int TEST_TIMEOUT_MINUTES = 5;
 
@@ -36,7 +36,7 @@ public class WorkflowAppTest {
         client = new DefaultKubernetesClient();
         CustomResourceDefinition crd = client.apiextensions().v1().customResourceDefinitions()
             .load(new FileInputStream(Paths.get("").toAbsolutePath().toString() + 
-                "\\src\\main\\java\\com\\nirmata\\workflow\\crd\\workflowtask-crd.yaml"))
+                "/src/main/java/com/nirmata/workflow/crd/workflowtask-crd.yaml"))
             .get();
         client.apiextensions().v1().customResourceDefinitions().createOrReplace(crd);
     }
