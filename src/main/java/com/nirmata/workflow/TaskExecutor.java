@@ -39,7 +39,16 @@ class TaskExecutor {
     }
 
     public TaskExecutor(Task task, int threadPoolSize, long threadKeepAliveTime, TimeUnit unit) {
-        this(task, new ThreadPoolExecutor(threadPoolSize, threadPoolSize, threadKeepAliveTime, unit, new LinkedBlockingQueue<>()));
+        ThreadPoolExecutor newExecutor = new ThreadPoolExecutor(threadPoolSize, threadPoolSize, threadKeepAliveTime, unit, new LinkedBlockingQueue<>());
+        newExecutor.allowCoreThreadTimeOut(true);
+        this.task = task;
+        this.executor = newExecutor;
+        try {
+            podName = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            podName = "unknown";
+        }
     }
 
     public TaskExecutor(Task task, int threadPoolSize) {
