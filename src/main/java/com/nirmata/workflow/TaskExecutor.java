@@ -4,7 +4,6 @@ import com.nirmata.workflow.crd.WorkflowTask;
 import com.nirmata.workflow.crd.WorkflowTaskStatus;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -59,7 +58,7 @@ class TaskExecutor {
 
     private class TaskExecution implements Runnable {
         private final String executorName = podName + "-" + Thread.currentThread().getId();
-        private final WorkflowTask taskResource;
+        private WorkflowTask taskResource;
 
         public TaskExecution(WorkflowTask taskResource) {
             this.taskResource = taskResource;
@@ -71,15 +70,15 @@ class TaskExecutor {
                 if (taskResource != null) {
                     String taskName = taskResource.getMetadata().getName();
 
-                    if (taskResource.getStatus() == null || taskResource.getStatus().getExecutor() == null) {
+                    WorkflowTaskStatus status;
+                    if (taskResource.getStatus() == null) {
+                        status = new WorkflowTaskStatus();
+                        taskResource.setStatus(status);
+                    } else {
+                        status = taskResource.getStatus();
+                    }
 
-                        WorkflowTaskStatus status;
-                        if (taskResource.getStatus() == null) {
-                            status = new WorkflowTaskStatus();
-                            taskResource.setStatus(status);
-                        } else {
-                            status = taskResource.getStatus();
-                        }
+                    if (status.getExecutor() == null) {
 
                         //set executor field
                         status.setExecutor(executorName);
@@ -87,34 +86,38 @@ class TaskExecutor {
                         //update state to executing
                         status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
                         try {
-                            api.patchStatus(taskResource);
+                            taskResource = api.patchStatus(taskResource);
                         } catch (KubernetesClientException e) {
-                            //System.out.println("executor already set");
-                            return;
+                            if (e.getStatus().getCode() == 409) {
+                                //logger.debug("http error 409");
+                                return;
+                            } else {
+                                e.printStackTrace();
+                            }
                         }
 
-                        try {
-                            String taskType = taskResource.getSpec().getType();
-                            logger.debug("Task {} of type {} executing...", taskName, taskType);
+                        String taskType = taskResource.getSpec().getType();
+                        logger.debug("Task {} of type {} executing...", taskName, taskType);
 
+                        try {
                             // execute task
                             task.execute(taskResource);
-
-                            taskCount += 1;
-                            logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
-
-                            //update state to completed
-                            status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
-                            api.replaceStatus(taskResource);
-
-                            //logger.debug("Updated resource: {}", result);
 
                         } catch (Exception e) {
                             logger.error("Task {} failed with exception {}", taskName, e);
 
                             status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
-                            api.replaceStatus(taskResource);
+                            taskResource.setStatus(status);
+                            taskResource = api.patchStatus(taskResource);
                         }
+
+                        taskCount += 1;
+                        logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
+
+                        //update state to completed
+                        status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
+                        taskResource.setStatus(status);
+                        taskResource = api.patchStatus(taskResource);
                     }
                 }
             } catch (Exception e) {

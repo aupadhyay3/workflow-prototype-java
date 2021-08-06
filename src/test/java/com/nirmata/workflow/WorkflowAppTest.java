@@ -19,7 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class WorkflowAppTest {
-    private static final int NUM_TASKS = 10;
+    private static final int NUM_TASKS = 50;
     private static final int TASK_SLEEP_TIME_SECONDS = 5;
     private static final int THREAD_POOL_SIZE = 3;
     private static final int NUM_INSTANCES = 2;
