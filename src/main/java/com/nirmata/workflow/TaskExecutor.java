@@ -23,7 +23,6 @@ class TaskExecutor {
     private final Task task;
     private final Executor executor;
 
-    private int taskCount = 0;
     private String podName;
 
     private NonNamespaceOperation<WorkflowTask, KubernetesResourceList<WorkflowTask>, Resource<WorkflowTask>> api;
@@ -67,48 +66,46 @@ class TaskExecutor {
         @Override
         public void run() {
             try {
-                String taskName = taskResource.getMetadata().getName();
-
                 WorkflowTaskStatus status = taskResource.getStatus();
                 if (status == null) {
                     status = new WorkflowTaskStatus();
                 }
+                if (status.getExecutor() == null) {
+                    status.setExecutor(executorName);
+                    status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
+                    taskResource.setStatus(status);
 
-                status.setExecutor(executorName);
-                status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
-                taskResource.setStatus(status);
-
-                try {
-                    taskResource = api.patchStatus(taskResource);
-                } catch (KubernetesClientException e) {
-                    if (e.getStatus().getCode() == 409) {
-                        // optimistic locking throws conflict error with code 409
-                        return;
-                    } else {
-                        e.printStackTrace();
+                    try {
+                        taskResource = api.patchStatus(taskResource);
+                    } catch (KubernetesClientException e) {
+                        if (e.getStatus().getCode() == 409) {
+                            // optimistic locking throws conflict error with code 409
+                            return;
+                        } else {
+                            e.printStackTrace();
+                        }
                     }
-                }
 
-                String taskType = taskResource.getSpec().getType();
-                logger.debug("Task {} of type {} executing...", taskName, taskType);
+                    String taskName = taskResource.getMetadata().getName();
+                    String taskType = taskResource.getSpec().getType();
+                    logger.debug("Task {} of type {} executing...", taskName, taskType);
 
-                try {
-                    task.execute(taskResource);
-                } catch (Exception e) {
-                    logger.error("Task {} failed with exception {}", taskName, e);
+                    try {
+                        task.execute(taskResource);
+                    } catch (Exception e) {
+                        logger.error("Task {} failed with exception {}", taskName, e);
 
-                    status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
+                        status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
+                        taskResource.setStatus(status);
+                        taskResource = api.patchStatus(taskResource);
+                    }
+
+                    status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
                     taskResource.setStatus(status);
                     taskResource = api.patchStatus(taskResource);
+
+                    logger.debug("Task {} of type {} completed.", taskName, taskType);
                 }
-
-                taskCount += 1;
-                logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
-
-                status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
-                taskResource.setStatus(status);
-                taskResource = api.patchStatus(taskResource);
-                
             } catch (Exception e) {
                 e.printStackTrace();
             }

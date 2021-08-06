@@ -19,7 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class WorkflowAppTest {
-    private static final int NUM_TASKS = 50;
+    private static final int NUM_TASKS = 30;
     private static final int TASK_SLEEP_TIME_SECONDS = 5;
     private static final int THREAD_POOL_SIZE = 3;
     private static final int NUM_INSTANCES = 2;
@@ -48,7 +48,7 @@ public class WorkflowAppTest {
     }
 
     /**
-     * Test using a single task type and a specified number of executors.
+     * Test using a single task type and a specified number of threads.
      */
     @Test
     public void testOneTaskType() throws Exception {
@@ -67,7 +67,7 @@ public class WorkflowAppTest {
     }
 
     /**
-     * Test using two task types and a specified number of executors.
+     * Test using two task types and a specified number of threads.
      */
     @Test
     public void testTwoTaskTypes() throws Exception {
@@ -90,7 +90,7 @@ public class WorkflowAppTest {
 
     /**
      * Test using one task type and a specified number of WorkflowApp instances,
-     * each with a specified number of executors.
+     * each with a specified number of threads.
      */
     @Test
     public void testMultipleInstances() throws Exception {
