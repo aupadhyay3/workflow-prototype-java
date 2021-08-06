@@ -67,59 +67,48 @@ class TaskExecutor {
         @Override
         public void run() {
             try {
-                if (taskResource != null) {
-                    String taskName = taskResource.getMetadata().getName();
+                String taskName = taskResource.getMetadata().getName();
 
-                    WorkflowTaskStatus status;
-                    if (taskResource.getStatus() == null) {
-                        status = new WorkflowTaskStatus();
-                        taskResource.setStatus(status);
+                WorkflowTaskStatus status = taskResource.getStatus();
+                if (status == null) {
+                    status = new WorkflowTaskStatus();
+                }
+
+                status.setExecutor(executorName);
+                status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
+                taskResource.setStatus(status);
+
+                try {
+                    taskResource = api.patchStatus(taskResource);
+                } catch (KubernetesClientException e) {
+                    if (e.getStatus().getCode() == 409) {
+                        // optimistic locking throws conflict error with code 409
+                        return;
                     } else {
-                        status = taskResource.getStatus();
-                    }
-
-                    if (status.getExecutor() == null) {
-
-                        //set executor field
-                        status.setExecutor(executorName);
-
-                        //update state to executing
-                        status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
-                        try {
-                            taskResource = api.patchStatus(taskResource);
-                        } catch (KubernetesClientException e) {
-                            if (e.getStatus().getCode() == 409) {
-                                //logger.debug("http error 409");
-                                return;
-                            } else {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        String taskType = taskResource.getSpec().getType();
-                        logger.debug("Task {} of type {} executing...", taskName, taskType);
-
-                        try {
-                            // execute task
-                            task.execute(taskResource);
-
-                        } catch (Exception e) {
-                            logger.error("Task {} failed with exception {}", taskName, e);
-
-                            status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
-                            taskResource.setStatus(status);
-                            taskResource = api.patchStatus(taskResource);
-                        }
-
-                        taskCount += 1;
-                        logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
-
-                        //update state to completed
-                        status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
-                        taskResource.setStatus(status);
-                        taskResource = api.patchStatus(taskResource);
+                        e.printStackTrace();
                     }
                 }
+
+                String taskType = taskResource.getSpec().getType();
+                logger.debug("Task {} of type {} executing...", taskName, taskType);
+
+                try {
+                    task.execute(taskResource);
+                } catch (Exception e) {
+                    logger.error("Task {} failed with exception {}", taskName, e);
+
+                    status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
+                    taskResource.setStatus(status);
+                    taskResource = api.patchStatus(taskResource);
+                }
+
+                taskCount += 1;
+                logger.debug("Task {} of type {} completed. Executor total: {}", taskName, taskType, taskCount);
+
+                status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
+                taskResource.setStatus(status);
+                taskResource = api.patchStatus(taskResource);
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
