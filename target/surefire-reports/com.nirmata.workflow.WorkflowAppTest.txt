@@ -1,0 +1,20 @@
+-------------------------------------------------------------------------------
+Test set: com.nirmata.workflow.WorkflowAppTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 4.845 s <<< FAILURE! - in com.nirmata.workflow.WorkflowAppTest
+com.nirmata.workflow.WorkflowAppTest  Time elapsed: 4.844 s  <<< ERROR!
+io.fabric8.kubernetes.client.KubernetesClientException: Operation: [create]  for kind: [CustomResourceDefinition]  with name: [workflowtasks.nirmata.com]  in namespace: [null]  failed.
+	at com.nirmata.workflow.WorkflowAppTest.setup(WorkflowAppTest.java:41)
+Caused by: java.net.ConnectException: Failed to connect to /127.0.0.1:60754
+	at com.nirmata.workflow.WorkflowAppTest.setup(WorkflowAppTest.java:41)
+Caused by: java.net.ConnectException: Connection refused: no further information
+	at com.nirmata.workflow.WorkflowAppTest.setup(WorkflowAppTest.java:41)
+
+com.nirmata.workflow.WorkflowAppTest  Time elapsed: 4.845 s  <<< ERROR!
+io.fabric8.kubernetes.client.KubernetesClientException: Operation: [list]  for kind: [WorkflowTask]  with name: [null]  in namespace: [default]  failed.
+	at com.nirmata.workflow.WorkflowAppTest.teardown(WorkflowAppTest.java:46)
+Caused by: java.net.ConnectException: Failed to connect to /127.0.0.1:60754
+	at com.nirmata.workflow.WorkflowAppTest.teardown(WorkflowAppTest.java:46)
+Caused by: java.net.ConnectException: Connection refused: no further information
+	at com.nirmata.workflow.WorkflowAppTest.teardown(WorkflowAppTest.java:46)
+
