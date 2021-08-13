@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Instant;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -65,7 +66,6 @@ class TaskExecutor {
     }
 
     private class TaskExecution implements Runnable {
-        private final String executorName = podName + "-" + Thread.currentThread().getId();
         private WorkflowTask taskResource;
 
         public TaskExecution(WorkflowTask taskResource) {
@@ -74,49 +74,53 @@ class TaskExecutor {
 
         @Override
         public void run() {
-            try {
-                WorkflowTaskStatus status = taskResource.getStatus();
-                if (status == null) {
-                    status = new WorkflowTaskStatus();
+            WorkflowTaskStatus status = taskResource.getStatus();
+            if (status == null) {
+                status = new WorkflowTaskStatus();
+            }
+            if (status.getExecutor() == null) {
+                status.setExecutor(podName + "-" + Thread.currentThread().getId());
+                status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
+                status.setStartTimeUTC(Instant.now().toString());
+                taskResource.setStatus(status);
+
+                try {
+                    taskResource = api.patchStatus(taskResource);
+                } catch (KubernetesClientException e) {
+                    if (e.getStatus().getCode() == 409) {
+                        // optimistic locking throws conflict error with code 409
+                        return;
+                    } else {
+                        e.printStackTrace();
+                    }
                 }
-                if (status.getExecutor() == null) {
-                    status.setExecutor(executorName);
-                    status.setState(WorkflowTaskStatus.ExecutionState.EXECUTING);
-                    taskResource.setStatus(status);
 
-                    try {
-                        taskResource = api.patchStatus(taskResource);
-                    } catch (KubernetesClientException e) {
-                        if (e.getStatus().getCode() == 409) {
-                            // optimistic locking throws conflict error with code 409
-                            return;
-                        } else {
-                            e.printStackTrace();
-                        }
-                    }
+                String taskName = taskResource.getMetadata().getName();
+                String taskType = taskResource.getSpec().getType();
+                logger.debug("Task {} of type {} executing...", taskName, taskType);
 
-                    String taskName = taskResource.getMetadata().getName();
-                    String taskType = taskResource.getSpec().getType();
-                    logger.debug("Task {} of type {} executing...", taskName, taskType);
-
-                    try {
-                        task.execute(taskResource);
-                    } catch (Exception e) {
-                        logger.error("Task {} failed with exception {}", taskName, e);
-
-                        status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
-                        taskResource.setStatus(status);
-                        taskResource = api.patchStatus(taskResource);
-                    }
+                try {
+                    task.execute(taskResource);
+                    
+                    logger.debug("Task {} of type {} completed.", taskName, taskType);
 
                     status.setState(WorkflowTaskStatus.ExecutionState.COMPLETED);
+                    status.setCompletionTimeUTC(Instant.now().toString());
                     taskResource.setStatus(status);
-                    taskResource = api.patchStatus(taskResource);
 
-                    logger.debug("Task {} of type {} completed.", taskName, taskType);
+                } catch (Exception e) {
+                    logger.error("Task {} failed with exception: {}", taskName, e.toString());
+
+                    status.setState(WorkflowTaskStatus.ExecutionState.FAILED);
+                    status.setError(e.getMessage());
+                    taskResource.setStatus(status);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+
+                try {
+                    taskResource = api.patchStatus(taskResource);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

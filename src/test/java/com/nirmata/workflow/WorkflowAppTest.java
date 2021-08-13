@@ -110,6 +110,81 @@ public class WorkflowAppTest {
         TimeUnit.MINUTES.sleep(TEST_TIMEOUT_MINUTES);
     }
 
+    /**
+     * Test using two task types, with one instance for each task type.
+     */
+    @Test
+    public void testTwoInstancesWithSeparateTaskTypes() throws Exception {
+        Task wfTaskA = createTestTask("testTypeA", TASK_SLEEP_TIME_SECONDS);
+        Task wfTaskB = createTestTask("testTypeB", TASK_SLEEP_TIME_SECONDS);
+
+        WorkflowApp workflowApp1 = WorkflowAppBuilder.builder()
+                .withClient(client)
+                .withNamespace(NAMESPACE)
+                .addTaskExecutor(wfTaskA, THREAD_POOL_SIZE)
+                .build();
+        workflowApp1.start();
+
+        WorkflowApp workflowApp2 = WorkflowAppBuilder.builder()
+                .withClient(client)
+                .withNamespace(NAMESPACE)
+                .addTaskExecutor(wfTaskB, THREAD_POOL_SIZE)
+                .build();
+        workflowApp2.start();
+
+        scheduleTasks(wfTaskA, NUM_TASKS);
+        scheduleTasks(wfTaskB, NUM_TASKS);
+
+        TimeUnit.MINUTES.sleep(TEST_TIMEOUT_MINUTES);
+    }
+
+    /**
+     * Test execution error handling. Executes one task that throws an exception.
+     */
+    @Test
+    public void testErrorHandling() throws Exception {
+        Task erroringTask = new Task() {
+            @Override
+            public void execute(WorkflowTask resource) throws Exception {
+                throw new Exception("Test error message");
+            }
+    
+            @Override
+            public String getType() {
+                return "testType";
+            }
+        };
+        
+        WorkflowApp workflowApp = WorkflowAppBuilder.builder()
+                .withClient(client)
+                .withNamespace(NAMESPACE)
+                .addTaskExecutor(erroringTask, 1)
+                .build();
+        workflowApp.start();
+
+        scheduleTasks(erroringTask, 1);
+
+        TimeUnit.MINUTES.sleep(TEST_TIMEOUT_MINUTES);
+    }
+
+    /**
+     * Test invalid tasks. Attempts to execute a task that has no corresponding executor. Task should not execute.
+     */
+    @Test
+    public void testInvalidTasks() throws Exception {
+        Task invalidTask = createTestTask("invalidType", TASK_SLEEP_TIME_SECONDS);
+        
+        WorkflowApp workflowApp = WorkflowAppBuilder.builder()
+                .withClient(client)
+                .withNamespace(NAMESPACE)
+                .build();
+        workflowApp.start();
+
+        scheduleTasks(invalidTask, 1);
+
+        TimeUnit.MINUTES.sleep(TEST_TIMEOUT_MINUTES);
+    }
+
     private Task createTestTask(String type, int sleepTimeSeconds) {
         Task testTask = new Task() {
             @Override
