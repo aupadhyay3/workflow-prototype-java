@@ -1,0 +1,157 @@
+# Created at 2021-08-10T14:23:27.452
+TestSet has not finished before stream error has appeared >> initializing exit by non-null configuration: DEFAULT
+java.io.EOFException
+	at java.base/java.io.DataInputStream.readInt(DataInputStream.java:396)
+	at org.apache.maven.surefire.booter.MasterProcessCommand.decode(MasterProcessCommand.java:115)
+	at org.apache.maven.surefire.booter.CommandReader$CommandRunnable.run(CommandReader.java:391)
+	at java.base/java.lang.Thread.run(Thread.java:832)
+
+
+# Created at 2021-08-10T14:23:30.504
+Unexpected IOException with stream: 14:23:30.503 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-2 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:30.519
+Unexpected IOException with stream: 14:23:30.518 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-1 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:30.525
+Unexpected IOException with stream: 14:23:30.524 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-0 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:30.530
+Unexpected IOException with stream: 14:23:30.529 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-3 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:30.532
+Unexpected IOException with stream: 14:23:30.531 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-4 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:30.534
+Unexpected IOException with stream: 14:23:30.534 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-5 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:35.566
+Unexpected IOException with stream: 14:23:35.566 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-5 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:35.574
+Unexpected IOException with stream: 14:23:35.573 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-3 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:35.576
+Unexpected IOException with stream: 14:23:35.574 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-4 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:35.585
+Unexpected IOException with stream: 14:23:35.584 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-7 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:35.585
+Unexpected IOException with stream: 14:23:35.584 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-6 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:35.591
+Unexpected IOException with stream: 14:23:35.588 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-8 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:40.600
+Unexpected IOException with stream: 14:23:40.600 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-7 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:40.609
+Unexpected IOException with stream: 14:23:40.608 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-6 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:40.621
+Unexpected IOException with stream: 14:23:40.620 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-10 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:40.622
+Unexpected IOException with stream: 14:23:40.620 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-8 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:40.622
+Unexpected IOException with stream: 14:23:40.620 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-9 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:40.630
+Unexpected IOException with stream: 14:23:40.629 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-11 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:45.657
+Unexpected IOException with stream: 14:23:45.656 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-9 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:45.688
+Unexpected IOException with stream: 14:23:45.688 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-11 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:45.689
+Unexpected IOException with stream: 14:23:45.688 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-12 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:45.690
+Unexpected IOException with stream: 14:23:45.688 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-10 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:45.696
+Unexpected IOException with stream: 14:23:45.695 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-13 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:45.700
+Unexpected IOException with stream: 14:23:45.699 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-14 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:50.704
+Unexpected IOException with stream: 14:23:50.703 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-12 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:50.716
+Unexpected IOException with stream: 14:23:50.715 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-15 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:50.722
+Unexpected IOException with stream: 14:23:50.722 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-13 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:50.729
+Unexpected IOException with stream: 14:23:50.729 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-16 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:50.733
+Unexpected IOException with stream: 14:23:50.732 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-14 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:50.744
+Unexpected IOException with stream: 14:23:50.742 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-17 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:55.738
+Unexpected IOException with stream: 14:23:55.737 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-15 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:55.757
+Unexpected IOException with stream: 14:23:55.757 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-18 of type testType executing...
+
+
+# Created at 2021-08-10T14:23:55.762
+Unexpected IOException with stream: 14:23:55.762 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-16 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:55.765
+Unexpected IOException with stream: 14:23:55.765 [pool-2-thread-1] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-17 of type testType completed.
+
+
+# Created at 2021-08-10T14:23:55.772
+Unexpected IOException with stream: 14:23:55.772 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-19 of type testType executing...
+
+
+# Created at 2021-08-10T14:24:00.780
+Unexpected IOException with stream: 14:24:00.780 [pool-2-thread-3] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-18 of type testType completed.
+
+
+# Created at 2021-08-10T14:24:00.792
+Unexpected IOException with stream: 14:24:00.792 [pool-2-thread-2] DEBUG com.nirmata.workflow.TaskExecutor - Task test-a259af78-812a-4a9b-be40-70e561cdc4c0-19 of type testType completed.
+
+
