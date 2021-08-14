@@ -10,7 +10,7 @@ A Golang implementation can be found [here](https://github.com/jacob-yim/workflo
 
 To create a new WorkflowApp, use [the builder](src/main/com/nirmata/workflow/WorkflowAppBuilder.java):
 
-    WorkflowApp workflowApp = WorkflowAppBuilder.builder()
+    WorkflowApp workflowApp = WorkflowAppBuilder.builder();
 
 **Required:** A fabric8 KubernetesClient and a namespace string must be specified using the builder.
 
@@ -18,7 +18,7 @@ To create a new WorkflowApp, use [the builder](src/main/com/nirmata/workflow/Wor
         .withClient(client)
         .withNamespace(namespace);
 
-Finally, add tasks and executors. WorkflowApp.addTaskExecutor() takes in two parameters: a Task implementing the Task interface and an integer thread pool size. Using this method, tasks are executed by a ThreadPoolExecutor that terminates threads that have been idle for 60 seconds.
+Finally, add tasks and executors. WorkflowApp.addTaskExecutor() takes in two parameters: a Task implementing the [Task interface](src/main/com/nirmata/workflow/Task.java) and an integer thread pool size. Using this method, tasks are executed by a ThreadPoolExecutor that terminates threads that have been idle for 60 seconds.
 
     WorkflowApp workflowApp = WorkflowAppBuilder.builder()
         .withClient(client)
